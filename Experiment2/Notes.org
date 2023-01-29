@@ -1,0 +1,100 @@
+#+title: Experiment 2 Notes!
+#+name: Dinesh Kumar G
+
+* Open System Call:
+To Open a file with the open system call...
+
+#+begin_src c
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdlib.h>
+
+int open(const char *name, int flags);
+int open(const char *name, int flags, mode_t mode);
+// Returns -1 if file cannot be opened...
+
+if (fd == -1)
+  exit(-1);
+
+#+end_src
+
+** Flags for Open
+- O_RDONLY: Readonly!
+- O_WRONLY: Write only!
+- O_RDWR: Read and Write!
+- O_APPEND: opened in append mode!
+- O_CREAT: if file doesn't exist, ask the kernel to create it!
+- O_EXCL: when given with O_CREAT the call to open will fail if the file exists!
+- O_LARGEFILE: for large files (> 2gigs)
+- O_NOATIME+ : for not updating access time upon read! <idk how this can be used o_< >
+- O_NOFOLLOW: for restricting the use of links in inputs..
+- O_TRUNC: if the file exists, the length is truncated to zero and is only applicable for
+  regular files
+
+** Example:
+#+begin_src c
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdio.h>
+
+int main(int argc, char **argv) {
+  int fd;
+  fd = open("/home/dinu/.software/os-lab/Experiment2/Notes.org",
+            O_WRONLY | O_APPEND,
+            0644);
+  // 0644 in octal:
+  // 4 + 2: read and write for user
+  // 4 read for the same group
+  // 4 read for other groups and shit... i forgot!
+  if (fd == -1) {
+    perror("Open Notes.org: ");
+    exit(-1);
+  }
+  // more code..
+  close(fd);
+  return 0;
+}
+#+end_src
+
+** Creat function call
+#+begin_src c
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+// same as open with O_WRONLY | O_TRUNC | O_CREAT
+int creat (const char *name, mode_t mode);
+#+end_src
+
+* Read system call:
+#+begin_src c
+#include <unistd.h>
+
+ssize_t read(int fd, void *buf, size_t len);
+
+unsigned long wrd;
+ssize_t nr;
+
+nr = read(fd, &wrd, sizeof (unsigned long));
+if (nr == -1)
+  /* error handling part */
+#+end_src
+
+Reads upto ~len~ bytes from the file pointed by ~fd~ into ~buf~
+** Good Code:
+You have to analyze this further dinesh!
+#+begin_src c
+ssize_t ret;
+while (len != 0 && (red = read(fd, buf, len)) != 0) {
+  if (ret == -1) {
+    if (errno == EINTR)
+      continue;
+    perror("read");
+    break;
+  }
+  len -= ret;
+  buf += ret;
+}
+#+end_src
